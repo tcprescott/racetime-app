@@ -130,6 +130,7 @@ class BotMixin:
 
     TODO: This should live somewhere more central, probably.
     """
+
     def get_bot(self, category):
         _, oauth_request = self.verify_request(self.request)
         return models.Bot.objects.filter(
@@ -190,6 +191,7 @@ class RaceChatDelete(RaceChatMixin):
 @method_decorator(csrf_exempt, name='dispatch')
 class OAuthRaceChatDelete(ScopedProtectedResourceView, BotMixin, RaceChatMixin):
     required_scopes = ['race_action']
+
     def post(self, request, *args, **kwargs):
         RaceChatDelete.post(self, request, *args, **kwargs)
 
@@ -237,6 +239,7 @@ class RaceChatPurge(RaceChatMixin):
 @method_decorator(csrf_exempt, name='dispatch')
 class OAuthRaceChatPurge(ScopedProtectedResourceView, BotMixin, RaceChatMixin):
     required_scopes = ['race_action']
+
     def post(self, request, *args, **kwargs):
         RaceChatPurge.post(self, request, *args, **kwargs)
 
@@ -657,3 +660,16 @@ class RaceListData(generic.View):
 
     def get_json_data(self):
         return json.dumps(self.current_races(), cls=DjangoJSONEncoder)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class OAuthRaceListData(ScopedProtectedResourceView, BotMixin, RaceListData):
+    required_scopes = ['race_action']
+
+    def get(self, request, *args, **kwargs):
+        self.unlisted_filter = Q()
+        resp = http.HttpResponse(
+            content=self.get_json_data(),
+            content_type='application/json',
+        )
+        return resp
